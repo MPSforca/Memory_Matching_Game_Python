@@ -18,6 +18,8 @@ actual_board = []
 # Card data:
 card_width = 170
 card_height = 150
+# Current pair data:
+current_flipped_card_index = None
 
 pygame.init()
 pygame.display.set_caption("Jogo da Memória")
@@ -75,16 +77,30 @@ def click_handler(mouse_x, mouse_y):
         if cards_positions[i].collidepoint(mouse_x, mouse_y):
             if shown_board[i] == images[0]:  # The card is backwards:
                 shown_board[i] = actual_board[i]
-                update_board()
+                # Draws the card:
+                screen.blit(shown_board[i], cards_positions[i])
+                pygame.display.flip()
+                global current_flipped_card_index
+                # There's already a card facing front:
+                if current_flipped_card_index is not None:
+                    # Wrong pair:
+                    if (actual_board[current_flipped_card_index] !=
+                            actual_board[i]):
+                        # Time for the player to see the card
+                        pygame.time.delay(1000)
+                        shown_board[current_flipped_card_index] = images[0]
+                        shown_board[i] = images[0]
+
+                        screen.blit(
+                            shown_board[current_flipped_card_index],
+                            cards_positions[current_flipped_card_index])
+
+                        screen.blit(shown_board[i], cards_positions[i])
+
+                    current_flipped_card_index = None
+                else:
+                    current_flipped_card_index = i
             break
-
-
-def update_board():
-    for i in range(0, 16):
-        current_position = cards_positions[i]
-
-        # Print image on screen and save it in a list (incluiding its position)
-        screen.blit(shown_board[i], current_position)
 
 
 def run():
