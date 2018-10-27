@@ -18,8 +18,13 @@ actual_board = []
 # Card data:
 card_width = 170
 card_height = 150
-# Current pair data:
-current_flipped_card_index = None
+# Game data:
+first_flipped_card_index = None
+second_flipped_card_index = None
+is_wrong = False
+last_wrong_time = 0
+how_many_pairs = 0
+score = 0
 
 pygame.init()
 pygame.display.set_caption("Jogo da Memória")
@@ -80,27 +85,43 @@ def click_handler(mouse_x, mouse_y):
                 # Draws the card:
                 screen.blit(shown_board[i], cards_positions[i])
                 pygame.display.flip()
-                global current_flipped_card_index
+                global first_flipped_card_index
                 # There's already a card facing front:
-                if current_flipped_card_index is not None:
+                if first_flipped_card_index is not None:
+                    global second_flipped_card_index
+                    second_flipped_card_index = i
                     # Wrong pair:
-                    if (actual_board[current_flipped_card_index] !=
-                            actual_board[i]):
-                        # Time for the player to see the card
-                        pygame.time.delay(1000)
-                        shown_board[current_flipped_card_index] = images[0]
-                        shown_board[i] = images[0]
-
-                        screen.blit(
-                            shown_board[current_flipped_card_index],
-                            cards_positions[current_flipped_card_index])
-
-                        screen.blit(shown_board[i], cards_positions[i])
-
-                    current_flipped_card_index = None
+                    if (actual_board[first_flipped_card_index] !=
+                            actual_board[second_flipped_card_index]):
+                        global is_wrong, last_wrong_time
+                        last_wrong_time = pygame.time.get_ticks()
+                        is_wrong = True
+                    else:
+                        first_flipped_card_index = None
+                        second_flipped_card_index = None
+                        is_wrong = False
                 else:
-                    current_flipped_card_index = i
+                    first_flipped_card_index = i
             break
+
+
+def wrong_pair():
+    global first_flipped_card_index, second_flipped_card_index
+    shown_board[first_flipped_card_index] = images[0]
+    shown_board[second_flipped_card_index] = images[0]
+
+    screen.blit(shown_board[first_flipped_card_index],
+                cards_positions[first_flipped_card_index])
+
+    screen.blit(shown_board[second_flipped_card_index],
+                cards_positions[second_flipped_card_index])
+
+    first_flipped_card_index = None
+    second_flipped_card_index = None
+
+    global is_wrong, last_wrong_time
+    is_wrong = False
+    last_wrong_time = 0
 
 
 def run():
@@ -108,9 +129,12 @@ def run():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and not is_wrong:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
                 click_handler(clicked_x, clicked_y)
+
+        if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 1000:
+            wrong_pair()
 
         pygame.display.flip()
 
