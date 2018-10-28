@@ -31,19 +31,25 @@ match_time = 0
 match_is_running = True
 leave_button = None
 restart_button = None
+logo = None
 
 pygame.init()
+pygame.mixer.init()
 pygame.display.set_caption("Jogo da Memória")
 pygame.display.set_icon(pygame.image.load
-                        (os.path.join("imagens", "costas.jpg")))
+                        (os.path.join("images", "costas.jpg")))
 
 # Screen size and color
 screen = pygame.display.set_mode((900, 700))
 screen.fill((255, 255, 255))
 
+# Load the logo:
+logo = pygame.image.load(os.path.join("images", "logo.png"))
+logo = pygame.transform.scale(logo, (250, 100))
+
 # Load the images:
 for image in images_name:
-    card = pygame.image.load(os.path.join("imagens", image))
+    card = pygame.image.load(os.path.join("images", image))
     # Set image size:
     card = pygame.transform.scale(card, (card_width, card_height))
 
@@ -93,8 +99,6 @@ def draw_menu():
     pygame.draw.rect(screen, (255, 255, 255), menu_rect)
 
     # Logo:
-    logo = pygame.image.load(os.path.join("imagens", "logo.png"))
-    logo = pygame.transform.scale(logo, (250, 100))
     rect = pygame.Rect(0, 0, 250, 100)
     screen.blit(logo, rect)
     write_game_data()
@@ -151,6 +155,9 @@ def click_handler(mouse_x, mouse_y):
         for i in range(0, 16):
             if cards_positions[i].collidepoint(mouse_x, mouse_y):
                 if shown_board[i] == images[0]:  # The card is backwards:
+                    pygame.mixer.stop()
+                    pygame.mixer.Sound(os.path.join(
+                                        "sounds", "flip.wav")).play()
                     shown_board[i] = actual_board[i]
                     # Draws the card:
                     screen.blit(shown_board[i], cards_positions[i])
@@ -168,6 +175,9 @@ def click_handler(mouse_x, mouse_y):
                             is_wrong = True
                             score -= 1
                         else:
+                            pygame.mixer.stop()
+                            pygame.mixer.Sound(os.path.join(
+                                                "sounds", "point.wav")).play()
                             first_flipped_card_index = None
                             second_flipped_card_index = None
                             is_wrong = False
@@ -180,6 +190,8 @@ def click_handler(mouse_x, mouse_y):
 
 
 def wrong_pair():
+    pygame.mixer.stop()
+    pygame.mixer.Sound(os.path.join("sounds", "error.wav")).play()
     global first_flipped_card_index, second_flipped_card_index
     shown_board[first_flipped_card_index] = images[0]
     shown_board[second_flipped_card_index] = images[0]
@@ -201,6 +213,8 @@ def wrong_pair():
 def check_win():
     # Victory
     if how_many_pairs == 8:
+        pygame.mixer.stop()
+        pygame.mixer.Sound(os.path.join("sounds", "victory.wav")).play()
         global match_is_running
         match_is_running = False
         ctypes.windll.user32.MessageBoxW(0, "Parabéns! Você venceu o " +
