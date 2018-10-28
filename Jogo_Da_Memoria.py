@@ -27,6 +27,7 @@ how_many_pairs = 0
 score = 0
 match_start_time = None
 match_time = 0
+match_is_running = True
 
 pygame.init()
 pygame.display.set_caption("Jogo da Memória")
@@ -138,6 +139,8 @@ def click_handler(mouse_x, mouse_y):
                         second_flipped_card_index = None
                         is_wrong = False
                         score += 3
+                        global how_many_pairs
+                        how_many_pairs += 1
                 else:
                     first_flipped_card_index = i
             break
@@ -162,6 +165,13 @@ def wrong_pair():
     last_wrong_time = 0
 
 
+def check_win():
+    # Victory
+    if how_many_pairs == 8:
+        global match_is_running
+        match_is_running = False
+
+
 def run():
     while 1:
         for event in pygame.event.get():
@@ -174,10 +184,14 @@ def run():
         if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 800:
             wrong_pair()
 
-        global match_time
-        match_time = (pygame.time.get_ticks() - match_start_time) // 1000
+        if match_is_running:
+            global match_time
+            # Calculates the match duration:
+            match_time = (pygame.time.get_ticks() - match_start_time) // 1000
 
         draw_menu()
+
+        check_win()
         pygame.display.flip()
 
 
