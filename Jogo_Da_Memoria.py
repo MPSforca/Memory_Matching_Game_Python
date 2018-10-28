@@ -30,6 +30,8 @@ match_time = 0
 
 pygame.init()
 pygame.display.set_caption("Jogo da Memória")
+pygame.display.set_icon(pygame.image.load
+                        (os.path.join("imagens", "costas.jpg")))
 
 # Screen size and color
 screen = pygame.display.set_mode((900, 700))
@@ -67,25 +69,29 @@ def start():
 
 
 def draw_menu():
+    # Reset:
     menu_rect = pygame.Rect(0, 0, 250, 700)
-    pygame.draw.rect(screen, (99, 0, 0), menu_rect)
+    pygame.draw.rect(screen, (255, 255, 255), menu_rect)
 
     # Logo:
-    logo = pygame.image.load(os.path.join("imagens", "logo.jpg"))
+    logo = pygame.image.load(os.path.join("imagens", "logo.png"))
     logo = pygame.transform.scale(logo, (250, 100))
     rect = pygame.Rect(0, 0, 250, 100)
     screen.blit(logo, rect)
     write_game_data()
+
+    # Line:
+    pygame.draw.line(screen, (0, 0, 0), (250, 0), (250, 700))
 
 
 # To write game pontuation and time
 def write_game_data():
 
     f = pygame.font.Font(os.path.join("fonts", "Montserrat-Regular.ttf"), 20)
-    text = f.render("Pontuação: " + str(score), 1, (255, 255, 255))
+    text = f.render("Pontuação: " + str(score), 1, (0, 0, 0))
     screen.blit(text, (20, 150, 30, 210))
 
-    text = f.render("Tempo: " + str(match_time), 1, (255, 255, 255))
+    text = f.render("Tempo: " + str(match_time) + "s", 1, (0, 0, 0))
     screen.blit(text, (20, 180, 30, 210))
 
 
@@ -165,7 +171,7 @@ def run():
                 clicked_x, clicked_y = pygame.mouse.get_pos()
                 click_handler(clicked_x, clicked_y)
 
-        if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 1000:
+        if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 800:
             wrong_pair()
 
         global match_time
