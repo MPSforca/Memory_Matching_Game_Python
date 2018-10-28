@@ -29,6 +29,8 @@ score = 0
 match_start_time = None
 match_time = 0
 match_is_running = True
+leave_button = None
+restart_button = None
 
 pygame.init()
 pygame.display.set_caption("Jogo da Memória")
@@ -39,22 +41,22 @@ pygame.display.set_icon(pygame.image.load
 screen = pygame.display.set_mode((900, 700))
 screen.fill((255, 255, 255))
 
+# Load the images:
+for image in images_name:
+    card = pygame.image.load(os.path.join("imagens", image))
+    # Set image size:
+    card = pygame.transform.scale(card, (card_width, card_height))
+
+    # It's not the first image (Card's back)
+    if len(images) > 0:
+        # Adds twice => Two cards of each on board
+        actual_board.append(card)
+        actual_board.append(card)
+
+    images.append(card)
+
 
 def start():
-    # Load and create images from path
-    for image in images_name:
-        card = pygame.image.load(os.path.join("imagens", image))
-        # Set image size:
-        card = pygame.transform.scale(card, (card_width, card_height))
-
-        # It's not the first image (Card's back)
-        if len(images) > 0:
-            # Adds twice => Two cards of each on board
-            actual_board.append(card)
-            actual_board.append(card)
-
-        images.append(card)
-
     # Shuffle the board
     random.shuffle(actual_board)
 
@@ -66,8 +68,23 @@ def start():
     # Updates the board that is being shown for the player
     create_board()
 
+    # Reset variables:
+    global score
+    score = 0
+
     global match_start_time
     match_start_time = pygame.time.get_ticks()
+
+    global first_flipped_card_index, second_flipped_card_index, is_wrong
+    first_flipped_card_index = None
+    second_flipped_card_index = None
+    is_wrong = False
+
+    global last_wrong_time, how_many_pairs, match_time, match_is_running
+    last_wrong_time = 0
+    how_many_pairs = 0
+    match_time = 0
+    match_is_running = True
 
 
 def draw_menu():
@@ -83,7 +100,17 @@ def draw_menu():
     write_game_data()
 
     # Line:
-    pygame.draw.line(screen, (0, 0, 0), (250, 0), (250, 700))
+    pygame.draw.line(screen, (0, 0, 0), (255, 0), (255, 700))
+
+    # Buttons to leave and restart:
+    f = pygame.font.Font(os.path.join("fonts", "Montserrat-Regular.ttf"), 20)
+    button_text = f.render("Reiniciar", 1, (0, 0, 0))
+    global restart_button
+    restart_button = screen.blit(button_text, (20, 600))
+
+    button_text = f.render("Sair", 1, (0, 0, 0))
+    global leave_button
+    leave_button = screen.blit(button_text, (20, 630))
 
 
 # To write game pontuation and time
@@ -116,35 +143,40 @@ def create_board():
 
 
 def click_handler(mouse_x, mouse_y):
-    for i in range(0, 16):
-        if cards_positions[i].collidepoint(mouse_x, mouse_y):
-            if shown_board[i] == images[0]:  # The card is backwards:
-                shown_board[i] = actual_board[i]
-                # Draws the card:
-                screen.blit(shown_board[i], cards_positions[i])
-                pygame.display.flip()
-                global first_flipped_card_index
-                # There's already a card facing front:
-                if first_flipped_card_index is not None:
-                    global second_flipped_card_index
-                    second_flipped_card_index = i
-                    # Wrong pair:
-                    if (actual_board[first_flipped_card_index] !=
-                            actual_board[second_flipped_card_index]):
-                        global is_wrong, last_wrong_time, score
-                        last_wrong_time = pygame.time.get_ticks()
-                        is_wrong = True
-                        score -= 1
+    if leave_button.collidepoint(mouse_x, mouse_y):
+        sys.exit()
+    elif restart_button.collidepoint(mouse_x, mouse_y):
+        start()
+    else:
+        for i in range(0, 16):
+            if cards_positions[i].collidepoint(mouse_x, mouse_y):
+                if shown_board[i] == images[0]:  # The card is backwards:
+                    shown_board[i] = actual_board[i]
+                    # Draws the card:
+                    screen.blit(shown_board[i], cards_positions[i])
+                    pygame.display.flip()
+                    global first_flipped_card_index
+                    # There's already a card facing front:
+                    if first_flipped_card_index is not None:
+                        global second_flipped_card_index
+                        second_flipped_card_index = i
+                        # Wrong pair:
+                        if (actual_board[first_flipped_card_index] !=
+                                actual_board[second_flipped_card_index]):
+                            global is_wrong, last_wrong_time, score
+                            last_wrong_time = pygame.time.get_ticks()
+                            is_wrong = True
+                            score -= 1
+                        else:
+                            first_flipped_card_index = None
+                            second_flipped_card_index = None
+                            is_wrong = False
+                            score += 3
+                            global how_many_pairs
+                            how_many_pairs += 1
                     else:
-                        first_flipped_card_index = None
-                        second_flipped_card_index = None
-                        is_wrong = False
-                        score += 3
-                        global how_many_pairs
-                        how_many_pairs += 1
-                else:
-                    first_flipped_card_index = i
-            break
+                        first_flipped_card_index = i
+                break
 
 
 def wrong_pair():
