@@ -2,6 +2,7 @@ import pygame
 import os.path
 import sys
 import random
+import ctypes
 
 # Element at 0: Card back
 images_name = ["costas.jpg", "carta1.jpg", "carta2.jpg", "carta3.jpg",
@@ -170,6 +171,9 @@ def check_win():
     if how_many_pairs == 8:
         global match_is_running
         match_is_running = False
+        ctypes.windll.user32.MessageBoxW(0, "Parabéns! Você venceu o " +
+                                            "jogo fazendo " + str(score) +
+                                            " pontos!", "Fim de Jogo!", 1)
 
 
 def run():
@@ -188,11 +192,12 @@ def run():
             global match_time
             # Calculates the match duration:
             match_time = (pygame.time.get_ticks() - match_start_time) // 1000
+            draw_menu()
 
-        draw_menu()
-
-        check_win()
         pygame.display.flip()
+
+        if match_is_running:
+            check_win()
 
 
 start()
