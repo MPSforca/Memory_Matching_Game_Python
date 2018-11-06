@@ -21,6 +21,7 @@ MENU_HEIGHT = WINDOW_HEIGHT
 card_backward_image = None
 board = []
 
+animations = []
 current_pair = []
 is_wrong = False
 last_wrong_time = 0
@@ -51,6 +52,20 @@ class Card:
     def flip_card(self):
         self.is_backward = not self.is_backward
 
+
+class Animation:
+    images = []
+    frame_interval = 0
+    current_index = 0
+    last_time_called = 0
+
+    def __init__(self, images, frame_interval = 5):
+        self.images = images
+        self.frame_interval = frame_interval
+        self.current_index = 0
+
+    def update(self, current_time):
+        if current_time - last_time_called >= frame_interval:
 
 pygame.init()
 pygame.mixer.init()
