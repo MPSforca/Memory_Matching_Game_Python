@@ -62,7 +62,7 @@ class Animation:
     last_time_called = 0
     rect = None
 
-    def __init__(self, images, rect, frame_interval = 10):
+    def __init__(self, images, rect, frame_interval = 8):
         self.images = images
         self.frame_interval = frame_interval
         self.current_index = 0
@@ -222,11 +222,6 @@ def wrong_pair():
     card1 = current_pair[0]
     card2 = current_pair[1]
 
-    cards_back = pygame.transform.scale(card_backward_image, (CARD_WIDTH, CARD_HEIGHT))
-
-    screen.blit(cards_back, card1.card_rectangle)
-    screen.blit(cards_back, card2.card_rectangle)
-
     current_pair[0].flip_card()
     current_pair[1].flip_card()
 
@@ -257,7 +252,7 @@ def run():
                 clicked_x, clicked_y = pygame.mouse.get_pos()
                 click_handler(clicked_x, clicked_y)
 
-        if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 800:
+        if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 1000:
             wrong_pair()
 
         if match_is_running:
