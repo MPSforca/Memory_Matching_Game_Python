@@ -97,14 +97,14 @@ pygame.display.set_icon(pygame.image.load(os.path.join("images", IMAGES_NAME[0] 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 screen.fill((0, 0, 0))
 draw_load_screen(0)
-draw_load_screen(0/490)
+draw_load_screen(0/482)
 
 logo = pygame.image.load(os.path.join("images", "logo.png"))
 logo = pygame.transform.scale(logo, (250, 100))
-draw_load_screen(1 / 490)
+draw_load_screen(1 / 482)
 
 card_backward_image = pygame.image.load(os.path.join("images", "costas.png"))
-draw_load_screen(2 / 490)
+draw_load_screen(2 / 482)
 
 current_progress = 2
 for card_name in IMAGES_NAME:
@@ -118,7 +118,7 @@ for card_name in IMAGES_NAME:
         frame_name = str(i).zfill(4) + IMAGES_EXTENSION
         current_frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name))))
         current_progress += 1
-        draw_load_screen(current_progress / 490)
+        draw_load_screen(current_progress / 482)
 
     frames.append(current_frames)
 
