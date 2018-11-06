@@ -81,19 +81,32 @@ class Animation:
         return len(self.images) - 1 == self.current_index
 
 
+def draw_load_screen(progress):
+    progress_bar_border = (int(WINDOW_WIDTH * 0.2), int(WINDOW_HEIGHT * 0.7), int(WINDOW_WIDTH * 0.6), 50)
+    pygame.draw.rect(screen, (255, 255, 255), progress_bar_border)
+
+    progress_bar = (int(WINDOW_WIDTH * 0.2 + 5), int(WINDOW_HEIGHT * 0.7 + 5), int( (WINDOW_WIDTH * 0.6 - 10) * progress), 40)
+    pygame.draw.rect(screen, (86, 0, 0), progress_bar)
+    pygame.display.flip()
+
 pygame.init()
 pygame.mixer.init()
 pygame.display.set_caption("Jogo da Memória")
 pygame.display.set_icon(pygame.image.load(os.path.join("images", IMAGES_NAME[0] + IMAGES_EXTENSION)))
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-screen.fill((255, 255, 255))
+screen.fill((0, 0, 0))
+draw_load_screen(0)
+draw_load_screen(0/490)
 
 logo = pygame.image.load(os.path.join("images", "logo.png"))
 logo = pygame.transform.scale(logo, (250, 100))
+draw_load_screen(1 / 490)
 
 card_backward_image = pygame.image.load(os.path.join("images", "costas.png"))
+draw_load_screen(2 / 490)
 
+current_progress = 2
 for card_name in IMAGES_NAME:
     card_image = pygame.image.load(os.path.join("images", card_name + IMAGES_EXTENSION))
 
@@ -104,9 +117,13 @@ for card_name in IMAGES_NAME:
     for i in range(1, 61):
         frame_name = str(i).zfill(4) + IMAGES_EXTENSION
         current_frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name))))
+        current_progress += 1
+        draw_load_screen(current_progress / 490)
 
     frames.append(current_frames)
 
+screen.fill((255, 255, 255))
+pygame.time.delay(200)
 
 
 def draw_menu():
