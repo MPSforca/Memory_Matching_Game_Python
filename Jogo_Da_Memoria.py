@@ -58,14 +58,26 @@ class Animation:
     frame_interval = 0
     current_index = 0
     last_time_called = 0
+    rect_position = None
 
-    def __init__(self, images, frame_interval = 5):
+    def __init__(self, images, rect, frame_interval = 5):
         self.images = images
         self.frame_interval = frame_interval
         self.current_index = 0
+        self.rect_position = rect
 
     def update(self, current_time):
-        if current_time - last_time_called >= frame_interval:
+        if current_time - self.last_time_called >= frame_interval and not self.finished():
+            frame = self.images[self.current_index]
+            self.last_time_called = current_time
+            self.current_index += 1
+            return frame
+        else
+            return None
+    
+    def finished(self):
+        return len(self.images) < self.current_index
+
 
 pygame.init()
 pygame.mixer.init()
@@ -162,6 +174,13 @@ def click_handler(mouse_x, mouse_y):
             if card.card_rectangle.collidepoint(mouse_x, mouse_y) and card.is_backward:
                 card.flip_card()
 
+                frames = []
+                for i in range(1, 61):
+                    frame_name = i.zfill(4) + IMAGES_EXTENSION
+                    frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name) ) ) )
+
+                animations.append(Animation(get_frames(card.card_name), card.card_rectangle))
+
                 pygame.mixer.stop()
                 pygame.mixer.Sound(os.path.join("sounds", "flip.wav")).play()
 
@@ -189,6 +208,14 @@ def click_handler(mouse_x, mouse_y):
                         
                 break
 
+def get_frames(card_name):
+    frames = []
+    for i in range(1, 61):
+        frame_name = i.zfill(4) + IMAGES_EXTENSION
+        frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name) ) ) )
+    
+    return frames
+
 
 def wrong_pair():
     pygame.mixer.stop()
@@ -204,6 +231,9 @@ def wrong_pair():
 
     current_pair[0].flip_card()
     current_pair[1].flip_card()
+
+    animations.append(Animation(get_frames(card1.card_name), card1.card_rectangle))
+    animations.append(Animation(get_frames(card2.card_name), card2.card_rectangle))
 
     current_pair.clear()
     global is_wrong, last_wrong_time
@@ -225,7 +255,7 @@ def run():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and not is_wrong:
+            elif event.type == pygame.MOUSEBUTTONDOWN and not is_wrong and len(animations) < 2:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
                 click_handler(clicked_x, clicked_y)
 
@@ -236,6 +266,15 @@ def run():
             global match_time
             match_time = (pygame.time.get_ticks() - match_start_time) // 1000
             draw_menu()
+        
+        for anim in animations:
+            new_frame = anim.update(pygame.time.get_ticks())
+            if new_frame is not None:
+                anim.rect_position.fill((255, 255, 255))
+                screen.blit(new_frame, anim.rect_position))
+
+            if anim.finished():
+                animations.remove(anim)
 
         pygame.display.flip()
 
