@@ -18,6 +18,8 @@ CARD_HEIGHT = 155
 MENU_WIDTH = 250
 MENU_HEIGHT = WINDOW_HEIGHT
 
+frames = []
+
 card_backward_image = None
 board = []
 
@@ -58,25 +60,25 @@ class Animation:
     frame_interval = 0
     current_index = 0
     last_time_called = 0
-    rect_position = None
+    rect = None
 
-    def __init__(self, images, rect, frame_interval = 5):
+    def __init__(self, images, rect, frame_interval = 10):
         self.images = images
         self.frame_interval = frame_interval
         self.current_index = 0
-        self.rect_position = rect
+        self.rect = rect
 
     def update(self, current_time):
-        if current_time - self.last_time_called >= frame_interval and not self.finished():
+        if current_time - self.last_time_called >= self.frame_interval and not self.finished():
             frame = self.images[self.current_index]
             self.last_time_called = current_time
             self.current_index += 1
             return frame
-        else
+        else:
             return None
     
     def finished(self):
-        return len(self.images) < self.current_index
+        return len(self.images) - 1 == self.current_index
 
 
 pygame.init()
@@ -97,6 +99,14 @@ for card_name in IMAGES_NAME:
 
     board.append(Card(card_name, card_image))
     board.append(Card(card_name, card_image))
+
+    current_frames = []
+    for i in range(1, 61):
+        frame_name = str(i).zfill(4) + IMAGES_EXTENSION
+        current_frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name))))
+
+    frames.append(current_frames)
+
 
 
 def draw_menu():
@@ -174,20 +184,10 @@ def click_handler(mouse_x, mouse_y):
             if card.card_rectangle.collidepoint(mouse_x, mouse_y) and card.is_backward:
                 card.flip_card()
 
-                frames = []
-                for i in range(1, 61):
-                    frame_name = i.zfill(4) + IMAGES_EXTENSION
-                    frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name) ) ) )
-
                 animations.append(Animation(get_frames(card.card_name), card.card_rectangle))
 
                 pygame.mixer.stop()
                 pygame.mixer.Sound(os.path.join("sounds", "flip.wav")).play()
-
-                card_img = card.card_image
-                card_img = pygame.transform.scale(card_img, (CARD_WIDTH, CARD_HEIGHT))
-                screen.blit(card_img, card.card_rectangle)
-                pygame.display.flip()
 
                 current_pair.append(card)
                 global is_wrong, score
@@ -209,12 +209,10 @@ def click_handler(mouse_x, mouse_y):
                 break
 
 def get_frames(card_name):
-    frames = []
-    for i in range(1, 61):
-        frame_name = i.zfill(4) + IMAGES_EXTENSION
-        frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name) ) ) )
-    
-    return frames
+    for i in range(0, len(IMAGES_NAME)):
+        if card_name == IMAGES_NAME[i]:
+            return frames[i]
+    return None
 
 
 def wrong_pair():
@@ -232,8 +230,8 @@ def wrong_pair():
     current_pair[0].flip_card()
     current_pair[1].flip_card()
 
-    animations.append(Animation(get_frames(card1.card_name), card1.card_rectangle))
-    animations.append(Animation(get_frames(card2.card_name), card2.card_rectangle))
+    animations.append(Animation(list(reversed(get_frames(card1.card_name))), card1.card_rectangle))
+    animations.append(Animation(list(reversed(get_frames(card2.card_name))), card2.card_rectangle))
 
     current_pair.clear()
     global is_wrong, last_wrong_time
@@ -270,8 +268,9 @@ def run():
         for anim in animations:
             new_frame = anim.update(pygame.time.get_ticks())
             if new_frame is not None:
-                anim.rect_position.fill((255, 255, 255))
-                screen.blit(new_frame, anim.rect_position))
+                pygame.draw.rect(screen, (255, 255, 255), anim.rect)
+                new_frame = pygame.transform.scale(new_frame, (CARD_WIDTH, CARD_HEIGHT))
+                screen.blit(new_frame, anim.rect)
 
             if anim.finished():
                 animations.remove(anim)
