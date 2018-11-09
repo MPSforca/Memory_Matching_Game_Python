@@ -82,6 +82,11 @@ class Animation:
 
 
 def draw_load_screen(progress):
+    global logo
+    logo = pygame.transform.scale(logo, (int(WINDOW_WIDTH * 0.3), int(WINDOW_WIDTH * 0.12)))
+    rect = (int(WINDOW_WIDTH * 0.35), int(WINDOW_HEIGHT * 0.7) - int(WINDOW_WIDTH * 0.12) - 50, int(WINDOW_WIDTH * 0.3), int(WINDOW_WIDTH * 0.12))
+    screen.blit(logo, rect)
+
     progress_bar_border = (int(WINDOW_WIDTH * 0.2), int(WINDOW_HEIGHT * 0.7), int(WINDOW_WIDTH * 0.6), 50)
     pygame.draw.rect(screen, (0, 0, 0), progress_bar_border)
 
@@ -146,6 +151,8 @@ def draw_menu():
     pygame.draw.rect(screen, (255, 255, 255), menu_rect)
 
     # Logo:
+    global logo
+    logo = pygame.transform.scale(logo, (250, 100))
     rect = pygame.Rect(0, 0, MENU_WIDTH, 100)
     screen.blit(logo, rect)
     write_game_data()
