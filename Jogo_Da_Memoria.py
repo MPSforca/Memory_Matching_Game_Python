@@ -37,6 +37,14 @@ leave_button = None
 restart_button = None
 logo = None
 
+fps = 0
+
+# Sounds
+score_sound = None
+flip_sound = None
+victory_sound = None
+error_sound = None
+
 class Card:
     card_name = ""
     card_image = ""
@@ -78,7 +86,7 @@ class Animation:
             return None
     
     def finished(self):
-        return len(self.images) - 1 == self.current_index
+        return len(self.images) - 1 <= self.current_index
 
 
 def draw_load_screen(progress):
@@ -101,6 +109,12 @@ pygame.display.set_icon(pygame.image.load(os.path.join("images", IMAGES_NAME[0] 
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 screen.fill((255, 255, 255))
+
+score_sound = pygame.mixer.Sound(os.path.join("sounds", "point.wav"))
+victory_sound = pygame.mixer.Sound(os.path.join("sounds", "victory.wav"))
+error_sound = pygame.mixer.Sound(os.path.join("sounds", "error.wav"))
+flip_sound = pygame.mixer.Sound(os.path.join("sounds", "flip.wav"))
+
 
 logo = pygame.image.load(os.path.join("images", "logo.png"))
 logo = pygame.transform.scale(logo, (250, 100))
@@ -197,6 +211,9 @@ def write_game_data():
 
     text = f.render("Tempo: " + str(match_time) + "s", 1, (0, 0, 0))
     screen.blit(text, (20, 180, 30, 210))
+    
+    fps_text = f.render("FPS: " + str(fps), 1, (0, 0, 0))
+    screen.blit(fps_text, (20, 570))
 
 
 def create_board():
@@ -225,7 +242,7 @@ def click_handler(mouse_x, mouse_y):
                 animations.append(Animation(get_frames(card.card_name), card.card_rectangle))
 
                 pygame.mixer.stop()
-                pygame.mixer.Sound(os.path.join("sounds", "flip.wav")).play()
+                flip_sound.play()
 
                 current_pair.append(card)
                 global is_wrong, score
@@ -237,7 +254,7 @@ def click_handler(mouse_x, mouse_y):
                         score -= 1  
                     else: 
                         pygame.mixer.stop()
-                        pygame.mixer.Sound(os.path.join("sounds", "point.wav")).play()
+                        score_sound.play()
                         global how_many_pairs
                         is_wrong = False
                         score += 3
@@ -255,7 +272,7 @@ def get_frames(card_name):
 
 def wrong_pair():
     pygame.mixer.stop()
-    pygame.mixer.Sound(os.path.join("sounds", "error.wav")).play()
+    error_sound.play()
 
     card1 = current_pair[0]
     card2 = current_pair[1]
@@ -275,12 +292,13 @@ def wrong_pair():
 def check_win():
     if how_many_pairs == 8:
         pygame.mixer.stop()
-        pygame.mixer.Sound(os.path.join("sounds", "victory.wav")).play()
+        victory_sound.play()
         global match_is_running
         match_is_running = False
         ctypes.windll.user32.MessageBoxW(0, "Parabéns! Você venceu o jogo fazendo " + str(score) + " pontos!", "Fim de Jogo!", 1)
 
 
+clock = pygame.time.Clock()
 def run():
     while 1:
         for event in pygame.event.get():
@@ -289,17 +307,24 @@ def run():
             elif event.type == pygame.MOUSEBUTTONDOWN and not is_wrong and len(animations) < 2:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
                 click_handler(clicked_x, clicked_y)
+            
+        time_now = pygame.time.get_ticks()
 
-        if is_wrong and pygame.time.get_ticks() - last_wrong_time >= 1000:
+        clock.tick()
+        global fps
+        fps = int(clock.get_fps())
+        draw_menu()
+
+        if is_wrong and time_now - last_wrong_time >= 1000:
             wrong_pair()
 
         if match_is_running:
             global match_time
-            match_time = (pygame.time.get_ticks() - match_start_time) // 1000
+            match_time = (time_now - match_start_time) // 1000
             draw_menu()
         
         for anim in animations:
-            new_frame = anim.update(pygame.time.get_ticks())
+            new_frame = anim.update(time_now)
             if new_frame is not None:
                 pygame.draw.rect(screen, (255, 255, 255), anim.rect)
                 new_frame = pygame.transform.scale(new_frame, (CARD_WIDTH, CARD_HEIGHT))
