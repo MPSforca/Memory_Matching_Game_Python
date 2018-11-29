@@ -4,26 +4,26 @@ import sys
 import random
 import ctypes
 
-IMAGES_NAME = ["carta1", "carta2", "carta3", "carta4", "carta5", "carta6", "carta7", "carta8"]
+# Vetor que representa o nome de todas as cartas do baralho
+NOME_IMAGENS = ["carta1", "carta2", "carta3", "carta4", "carta5", "carta6", "carta7", "carta8"]
 
-IMAGES_EXTENSION = ".png"
+# Constante que representa o tipo das imagens das cartas
+EXTENSAO_IMAGENS = ".png"
 
-WINDOW_WIDTH = 900
-WINDOW_HEIGHT = 700
+# Dimensões da tela:
+WIDTH_TELA = 900
+HEIGHT_TELA = 700
 
 # Card data
 CARD_WIDTH = 105
 CARD_HEIGHT = 155
 
 MENU_WIDTH = 250
-MENU_HEIGHT = WINDOW_HEIGHT
-
-frames = []
+MENU_HEIGHT = HEIGHT_TELA
 
 card_backward_image = None
 board = []
 
-animations = []
 current_pair = []
 is_wrong = False
 last_wrong_time = 0
@@ -37,7 +37,6 @@ leave_button = None
 restart_button = None
 logo = None
 
-fps = 0
 
 # Sounds
 score_sound = None
@@ -62,52 +61,12 @@ class Card:
     def flip_card(self):
         self.is_backward = not self.is_backward
 
-
-class Animation:
-    images = []
-    frame_interval = 0
-    current_index = 0
-    last_time_called = 0
-    rect = None
-
-    def __init__(self, images, rect, frame_interval = 8):
-        self.images = images
-        self.frame_interval = frame_interval
-        self.current_index = 0
-        self.rect = rect
-
-    def update(self, current_time):
-        if current_time - self.last_time_called >= self.frame_interval and not self.finished():
-            frame = self.images[self.current_index]
-            self.last_time_called = current_time
-            self.current_index += 1
-            return frame
-        else:
-            return None
-    
-    def finished(self):
-        return len(self.images) - 1 <= self.current_index
-
-
-def draw_load_screen(progress):
-    global logo
-    logo = pygame.transform.scale(logo, (int(WINDOW_WIDTH * 0.3), int(WINDOW_WIDTH * 0.12)))
-    rect = (int(WINDOW_WIDTH * 0.35), int(WINDOW_HEIGHT * 0.7) - int(WINDOW_WIDTH * 0.12) - 50, int(WINDOW_WIDTH * 0.3), int(WINDOW_WIDTH * 0.12))
-    screen.blit(logo, rect)
-
-    progress_bar_border = (int(WINDOW_WIDTH * 0.2), int(WINDOW_HEIGHT * 0.7), int(WINDOW_WIDTH * 0.6), 50)
-    pygame.draw.rect(screen, (0, 0, 0), progress_bar_border)
-
-    progress_bar = (int(WINDOW_WIDTH * 0.2 + 5), int(WINDOW_HEIGHT * 0.7 + 5), int( (WINDOW_WIDTH * 0.6 - 10) * progress), 40)
-    pygame.draw.rect(screen, (255, 0, 0), progress_bar)
-    pygame.display.flip()
-
 pygame.init()
 pygame.mixer.init()
 pygame.display.set_caption("Jogo da Memória")
-pygame.display.set_icon(pygame.image.load(os.path.join("images", IMAGES_NAME[0] + IMAGES_EXTENSION)))
+pygame.display.set_icon(pygame.image.load(os.path.join("images", NOME_IMAGENS[0] + EXTENSAO_IMAGENS)))
 
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+screen = pygame.display.set_mode((WIDTH_TELA, HEIGHT_TELA))
 screen.fill((255, 255, 255))
 
 score_sound = pygame.mixer.Sound(os.path.join("sounds", "point.wav"))
@@ -118,42 +77,14 @@ flip_sound = pygame.mixer.Sound(os.path.join("sounds", "flip.wav"))
 
 logo = pygame.image.load(os.path.join("images", "logo.png"))
 logo = pygame.transform.scale(logo, (250, 100))
-draw_load_screen(0 / 280)
 
 card_backward_image = pygame.image.load(os.path.join("images", "costas.png"))
-draw_load_screen(1 / 280)
 
-current_progress = 2
-
-# Load card's back frames (same for all cards => Reduce loading time)
-cards_back_frames = []
-for i in range(1, 31):
-    frame_name = str(i).zfill(4) + IMAGES_EXTENSION
-    cards_back_frames.append(pygame.image.load(os.path.join("animations", os.path.join(IMAGES_NAME[0], frame_name))))
-    draw_load_screen(current_progress / 280)
-    current_progress += 1
-
-for i in IMAGES_NAME:
-    frames.append(list(cards_back_frames))     
-    draw_load_screen(current_progress / 280)
-    current_progress += 1
-
-index = 0
-for card_name in IMAGES_NAME:
-    card_image = pygame.image.load(os.path.join("images", card_name + IMAGES_EXTENSION))
+for card_name in NOME_IMAGENS:
+    card_image = pygame.image.load(os.path.join("images", card_name + EXTENSAO_IMAGENS))
 
     board.append(Card(card_name, card_image))
     board.append(Card(card_name, card_image))
-
-    current_frames = []
-    for i in range(31, 61):
-        frame_name = str(i).zfill(4) + IMAGES_EXTENSION
-        current_frames.append(pygame.image.load(os.path.join("animations", os.path.join(card_name, frame_name))))
-        draw_load_screen(current_progress / 280)
-        current_progress += 1
-
-    frames[index] += current_frames
-    index += 1
 
 screen.fill((255, 255, 255))
 pygame.time.delay(100)
@@ -211,9 +142,6 @@ def write_game_data():
 
     text = f.render("Tempo: " + str(match_time) + "s", 1, (0, 0, 0))
     screen.blit(text, (20, 180, 30, 210))
-    
-    fps_text = f.render("FPS: " + str(fps), 1, (0, 0, 0))
-    screen.blit(fps_text, (20, 570))
 
 
 def create_board():
@@ -239,10 +167,12 @@ def click_handler(mouse_x, mouse_y):
             if card.card_rectangle.collidepoint(mouse_x, mouse_y) and card.is_backward:
                 card.flip_card()
 
-                animations.append(Animation(get_frames(card.card_name), card.card_rectangle))
-
                 pygame.mixer.stop()
                 flip_sound.play()
+
+                pygame.draw.rect(screen, (255, 255, 255), card.card_rectangle)
+                c = pygame.transform.scale(card.card_image, (CARD_WIDTH, CARD_HEIGHT))
+                screen.blit(c, card.card_rectangle)
 
                 current_pair.append(card)
                 global is_wrong, score
@@ -260,28 +190,22 @@ def click_handler(mouse_x, mouse_y):
                         score += 3
                         how_many_pairs += 1
                         current_pair.clear()
-                        
                 break
-
-def get_frames(card_name):
-    for i in range(0, len(IMAGES_NAME)):
-        if card_name == IMAGES_NAME[i]:
-            return frames[i]
-    return None
-
 
 def wrong_pair():
     pygame.mixer.stop()
     error_sound.play()
 
-    card1 = current_pair[0]
-    card2 = current_pair[1]
-
     current_pair[0].flip_card()
     current_pair[1].flip_card()
 
-    animations.append(Animation(list(reversed(get_frames(card1.card_name))), card1.card_rectangle))
-    animations.append(Animation(list(reversed(get_frames(card2.card_name))), card2.card_rectangle))
+    pygame.draw.rect(screen, (255, 255, 255), current_pair[0].card_rectangle)
+    card1 = pygame.transform.scale(card_backward_image, (CARD_WIDTH, CARD_HEIGHT))
+    screen.blit(card1, current_pair[0].card_rectangle)
+
+    pygame.draw.rect(screen, (255, 255, 255), current_pair[1].card_rectangle)
+    card1 = pygame.transform.scale(card_backward_image, (CARD_WIDTH, CARD_HEIGHT))
+    screen.blit(card1, current_pair[1].card_rectangle)
 
     current_pair.clear()
     global is_wrong, last_wrong_time
@@ -304,15 +228,11 @@ def run():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and not is_wrong and len(animations) < 2:
+            elif event.type == pygame.MOUSEBUTTONDOWN and not is_wrong:
                 clicked_x, clicked_y = pygame.mouse.get_pos()
                 click_handler(clicked_x, clicked_y)
             
         time_now = pygame.time.get_ticks()
-
-        clock.tick()
-        global fps
-        fps = int(clock.get_fps())
         draw_menu()
 
         if is_wrong and time_now - last_wrong_time >= 1000:
@@ -322,16 +242,6 @@ def run():
             global match_time
             match_time = (time_now - match_start_time) // 1000
             draw_menu()
-        
-        for anim in animations:
-            new_frame = anim.update(time_now)
-            if new_frame is not None:
-                pygame.draw.rect(screen, (255, 255, 255), anim.rect)
-                new_frame = pygame.transform.scale(new_frame, (CARD_WIDTH, CARD_HEIGHT))
-                screen.blit(new_frame, anim.rect)
-
-            if anim.finished():
-                animations.remove(anim)
 
         pygame.display.flip()
 
